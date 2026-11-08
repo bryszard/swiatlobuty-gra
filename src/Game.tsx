@@ -66,9 +66,11 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
       const k = KEYS[e.key]; if (k) { press(s, k); e.preventDefault(); }
     };
     const ku = (e: KeyboardEvent) => { if (e.key === " " || e.code === "Space") s.boostOn = false; const k = KEYS[e.key]; if (k) release(s, k); };
-    const pd = (e: PointerEvent) => { s.ptr = toStage(e); };
-    const pm = (e: PointerEvent) => { if (e.buttons || e.pointerType === "touch") s.ptr = toStage(e); };
-    const pu = () => { s.ptr = null; };
+    let steerId = -1;
+    const onCtl = (e: PointerEvent) => !!(e.target as Element | null)?.closest?.("[data-ctl],button");
+    const pd = (e: PointerEvent) => { if (onCtl(e)) return; steerId = e.pointerId; s.ptr = toStage(e); };
+    const pm = (e: PointerEvent) => { if (e.pointerId === steerId && (e.buttons || e.pointerType === "touch")) s.ptr = toStage(e); };
+    const pu = (e: PointerEvent) => { if (e.pointerId === steerId) { s.ptr = null; steerId = -1; } };
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     const el = root.current!; el.addEventListener("pointerdown", pd); window.addEventListener("pointermove", pm); window.addEventListener("pointerup", pu); window.addEventListener("pointercancel", pu);
     const togglePause = () => { s.paused = !s.paused; if (audio.ctx) void (s.paused ? audio.ctx.suspend() : audio.ctx.resume()); force(); };
@@ -255,7 +257,7 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
         };
         const tb = s.boost > 0.3;
         return (<>
-          <div onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); if (!s.boostOn) audio.whoosh(); s.boostOn = true; }} onPointerUp={() => { s.boostOn = false; }} onPointerLeave={() => { s.boostOn = false; }} onPointerCancel={() => { s.boostOn = false; }} onContextMenu={(e) => e.preventDefault()} style={{ ...base, left: 36, bottom: 40, width: 230, height: 230, borderRadius: 115, fontSize: 52, background: tb ? "#ffe14d" : "#ff7ad9", transform: tb ? "translateY(6px)" : undefined }}>TURBO</div>
+          <div data-ctl="1" onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); if (!s.boostOn) audio.whoosh(); s.boostOn = true; }} onPointerUp={() => { s.boostOn = false; }} onPointerLeave={() => { s.boostOn = false; }} onPointerCancel={() => { s.boostOn = false; }} onContextMenu={(e) => e.preventDefault()} style={{ ...base, left: 36, bottom: 40, width: 230, height: 230, borderRadius: 115, fontSize: 52, background: tb ? "#ffe14d" : "#ff7ad9", transform: tb ? "translateY(6px)" : undefined }}>TURBO</div>
         </>);
       })() : null}
       <div style={{ position: "absolute", right: 36, top: 24, display: "flex", gap: 14 }}>
