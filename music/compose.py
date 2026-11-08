@@ -183,6 +183,16 @@ p.melody("lead", PRE, vel=96); p.comp("organ", ["C", "G", "Am", "D"], "oompah", 
 p.melody("lead", HOOK, vel=108, sub=lambda m, b: m); p.melody("organ", HOOK, vel=56, octave=-12); p.comp("organ", CH_RB, "oompah", vel=60); p.bass("bass", CH_RB, "oompah", vel=88); p.drums("drums", 8, "carousel", fill=True); p.bar += 8
 pieces.append(p)
 
+# 6b. London: Westminster-chime wink, clarinet + music-hall piano stride, brushed beat
+CHIME = [(0, 68), (1, 66), (2, 64), (3, 59)]  # G#4 F#4 E4 B3 (the Westminster quarters, first phrase)
+p = Piece("london", 120, {"lead": (0, 71), "piano": (1, 0), "bass": (2, 32), "bells": (3, 14), "drums": DRUM})
+for b, m in CHIME: p.add("bells", b * 1.5, m, 1.4, 100)
+p.add("bells", 6, 52, 2.0, 100); p.comp("piano", ["Em"], "oompah", vel=50); p.bar = 2; p.loop_bar = 2
+p.melody("lead", VERSE, vel=88, gate=0.85); p.comp("piano", CH_VERSE, "oompah", vel=58); p.bass("bass", CH_VERSE, "oompah", vel=80); p.drums("drums", 8, "rock"); p.bar += 8
+p.melody("lead", PRE, vel=94); p.comp("piano", CH_PRE, "oompah", vel=62); p.bass("bass", CH_PRE, "oompah", vel=84); p.drums("drums", 4, "rock", fill=True); p.bar += 4
+p.melody("lead", HOOK, vel=104); p.melody("bells", HOOK, vel=60, octave=12, gate=0.5); p.comp("piano", CH_EM, "oompah", vel=64); p.bass("bass", CH_EM, "drive", vel=84); p.drums("drums", 8, "rock", fill=True); p.bar += 8
+pieces.append(p)
+
 # 7. Outro: the hook as a lullaby, then a held chord
 p = Piece("outro", 72, {"lead": (0, 10), "pad": (1, 48), "bass": (2, 32)})
 p.melody("lead", HOOK, vel=80); p.comp("pad", CH_EM, "pad", vel=34); p.bass("bass", CH_EM, "half", vel=56)

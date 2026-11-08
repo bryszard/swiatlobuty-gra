@@ -133,6 +133,9 @@ class Engine {
     else if (p === 17 || p === 19) { lp.frequency.value = 5000; oscs.push(osc("sine", f), osc("sine", f * 2), osc("sine", f * 3, 3), osc("square", f * 4)); stopAt = env(0.08 * v, 0.015, 0.05, 0.9, 0.06); }
     else if (p === 32 || p === 33) { lp.frequency.value = 600; oscs.push(osc("triangle", f), osc("sine", f * 2)); stopAt = env(0.28 * v, 0.01, 0.3, 0.5, 0.1); }
     else if (p === 38) { lp.frequency.setValueAtTime(900, at); lp.frequency.exponentialRampToValueAtTime(260, at + 0.2); oscs.push(osc("sawtooth", f), osc("square", f * 0.5)); stopAt = env(0.2 * v, 0.004, 0.25, 0.4, 0.06); }
+    else if (p === 71) { lp.frequency.value = 2200; const o = osc("square", f); const lfo = ctx.createOscillator(); lfo.frequency.value = 5; const lg = ctx.createGain(); lg.gain.value = f * 0.004; lfo.connect(lg); lg.connect(o.frequency); lfo.start(at); lfo.stop(at + n.d + 0.8); oscs.push(o, osc("sine", f * 2)); stopAt = env(0.1 * v, 0.04, 0.1, 0.8, 0.08); }
+    else if (p === 14) { lp.frequency.value = 7000; oscs.push(osc("sine", f), osc("sine", f * 2.76), osc("sine", f * 5.4)); stopAt = env(0.2 * v, 0.003, Math.min(2.4, n.d + 1), 0.02, 0.5); }
+    else if (p === 0) { lp.frequency.value = 3600; oscs.push(osc("triangle", f), osc("sine", f * 2)); stopAt = env(0.15 * v, 0.004, 0.5, 0.08, 0.15); }
     else if (p === 58) { lp.frequency.value = 500; oscs.push(osc("triangle", f), osc("square", f)); stopAt = env(0.22 * v, 0.02, 0.15, 0.7, 0.06); }
     else { lp.frequency.value = 3000; oscs.push(osc("triangle", f)); stopAt = env(0.15 * v, 0.01, 0.2, 0.5, 0.1); }
     oscs.forEach((o) => o.stop(stopAt + 0.1));

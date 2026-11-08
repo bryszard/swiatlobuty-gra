@@ -11,7 +11,7 @@ type Screen = { k: "title" } | { k: "intro" } | { k: "level"; i: number } | { k:
 const parseHash = (): Screen | null => {
   const h = window.location.hash.replace("#", "");
   const m = /^level(\d)$/.exec(h);
-  if (m) return { k: "level", i: Math.max(0, Math.min(3, Number(m[1]) - 1)) };
+  if (m) return { k: "level", i: Math.max(0, Math.min(LEVELS.length - 1, Number(m[1]) - 1)) };
   if (h === "intro") return { k: "intro" };
   if (h === "outro") return { k: "outro" };
   return null;

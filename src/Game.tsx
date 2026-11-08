@@ -1,3 +1,4 @@
+import { LondonBack } from "./art/London";
 import React, { useEffect, useMemo, useReducer, useRef } from "react";
 import { Ala, AlaDefs } from "./art/Ala";
 import { mixPose, POSES } from "./art/poses";
@@ -19,7 +20,7 @@ type Popup = { x: number; y: number; t: number; text: string };
 
 const Backdrop = React.memo(({ id, t, scroll }: { id: LevelId; t: number; scroll: number }) => {
   const p = { t, scroll, pulse: 0 };
-  return id === "krakow" ? <KrakowBack {...p} /> : id === "korea" ? <SeoulBack {...p} /> : id === "spain" ? <SpainBack {...p} /> : <RabkoBack {...p} />;
+  return id === "krakow" ? <KrakowBack {...p} /> : id === "korea" ? <SeoulBack {...p} /> : id === "spain" ? <SpainBack {...p} /> : id === "london" ? <LondonBack {...p} /> : <RabkoBack {...p} />;
 });
 
 const FAST = new URLSearchParams(window.location.search).get("fast") ? 6 : 1;
