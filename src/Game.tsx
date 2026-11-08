@@ -23,6 +23,7 @@ const Backdrop = React.memo(({ id, t, scroll }: { id: LevelId; t: number; scroll
 });
 
 const FAST = new URLSearchParams(window.location.search).get("fast") ? 6 : 1;
+const PAD = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)").matches || new URLSearchParams(window.location.search).get("pad") !== null);
 const COLS = ["#ff7ad9", "#ffe14d", "#7ae7ff", "#ffffff", "#8cf0a8"];
 const KEYS: Record<string, string> = { ArrowUp: "u", w: "u", W: "u", ArrowDown: "d", s: "d", S: "d", ArrowLeft: "l", a: "l", A: "l", ArrowRight: "r", d: "r", D: "r" };
 
@@ -209,7 +210,20 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
         <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${clamp(s.cam / (L - 1000)) * 100}%`, background: `linear-gradient(90deg, ${def.accent}, #ffe14d)`, borderRadius: 10 }} />
         <svg style={{ position: "absolute", left: `calc(${clamp(s.cam / (L - 1000)) * 100}% - 24px)`, top: -22, overflow: "visible" }} width="48" height="48" viewBox="-1 -1 2 2"><path d={star4} fill="#fff" stroke="#1a1226" strokeWidth={0.14} /></svg>
       </div>
-      <div onPointerDown={(e) => { e.stopPropagation(); if (!s.boostOn) audio.whoosh(); s.boostOn = true; }} onPointerUp={() => { s.boostOn = false; }} onPointerLeave={() => { s.boostOn = false; }} onPointerCancel={() => { s.boostOn = false; }} style={{ position: "absolute", right: 36, bottom: 40, width: 190, height: 190, borderRadius: 95, background: s.boost > 0.3 ? "#ffe14d" : "#ff7ad9", border: "8px solid #1a1226", boxShadow: "0 8px 0 #1a1226", display: "flex", alignItems: "center", justifyContent: "center", fontFamily, fontWeight: 800, fontSize: 40, color: "#1a1226", userSelect: "none", touchAction: "none", cursor: "pointer" }}>TURBO</div>
+      {PAD ? (() => {
+        const base = { position: "absolute", width: 150, height: 150, borderRadius: 40, border: "8px solid #1a1226", boxShadow: "0 8px 0 #1a1226", display: "flex", alignItems: "center", justifyContent: "center", fontFamily, fontWeight: 800, color: "#1a1226", userSelect: "none", touchAction: "none", cursor: "pointer", WebkitUserSelect: "none" } as React.CSSProperties;
+        const key = (k: string, label: string, right: number, bottom: number) => {
+          const on = s.keys.has(k);
+          const dn = (e: React.PointerEvent) => { e.stopPropagation(); e.preventDefault(); s.keys.add(k); };
+          const up = () => { s.keys.delete(k); };
+          return <div key={k} onPointerDown={dn} onPointerUp={up} onPointerLeave={up} onPointerCancel={up} onContextMenu={(e) => e.preventDefault()} style={{ ...base, right, bottom, fontSize: 80, background: on ? "#ffe14d" : "rgba(255,255,255,.82)", transform: on ? "translateY(6px)" : undefined }}>{label}</div>;
+        };
+        const tb = s.boost > 0.3;
+        return (<>
+          {key("u", "▲", 196, 220)}{key("l", "◀", 360, 40)}{key("d", "▼", 196, 40)}{key("r", "▶", 32, 40)}
+          <div onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); if (!s.boostOn) audio.whoosh(); s.boostOn = true; }} onPointerUp={() => { s.boostOn = false; }} onPointerLeave={() => { s.boostOn = false; }} onPointerCancel={() => { s.boostOn = false; }} onContextMenu={(e) => e.preventDefault()} style={{ ...base, left: 36, bottom: 40, width: 230, height: 230, borderRadius: 115, fontSize: 52, background: tb ? "#ffe14d" : "#ff7ad9", transform: tb ? "translateY(6px)" : undefined }}>TURBO</div>
+        </>);
+      })() : null}
       <div style={{ position: "absolute", right: 36, top: 24, display: "flex", gap: 14 }}>
         <Btn onClick={() => (window as unknown as { __pause: () => void }).__pause()} label={s.paused ? "▶" : "❚❚"} />
       </div>
