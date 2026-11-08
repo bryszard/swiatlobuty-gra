@@ -8,10 +8,10 @@ export type LevelDef = {
 };
 
 export const LEVELS: LevelDef[] = [
-  { id: "krakow", n: 1, name: "Kraków", sub: "Nad Wisłą i Wawelem", hint: "Zbieraj iskry i obwarzanki. Trzymaj spację, żeby lecieć szybciej!", music: "cracow", bg: "krakow", outfit: "jacket", speed: 235, secs: 64, accent: "#ff9a3c", bonusName: "obwarzanki" },
-  { id: "korea", n: 2, name: "Korea", sub: "Miasto świateł", hint: "Lampiony niosą Alę w górę. Spacja to turbo!", music: "korea", bg: "korea", outfit: "hanbok", speed: 245, secs: 64, accent: "#ff5f6a", bonusName: "lampiony" },
-  { id: "spain", n: 3, name: "Hiszpania", sub: "Zaćmienie i flamenco", hint: "Zbieraj pomarańcze i gwiazdki. Spacja to turbo!", music: "spain", bg: "spain", outfit: "jacket", speed: 255, secs: 64, accent: "#ffcf4a", bonusName: "pomarańcze" },
-  { id: "rabko", n: 4, name: "Rabkoland", sub: "Karuzela i kolejka górska", hint: "Przelatuj przez obręcze i łap balony. Spacja to turbo!", music: "rabkoland", bg: "rabko", outfit: "jacket", speed: 265, secs: 64, accent: "#ff7ad9", bonusName: "balony" },
+  { id: "krakow", n: 1, name: "Kraków", sub: "Nad Wisłą i Wawelem", hint: "Zbieraj iskry i obwarzanki. Ala leci sama, a TURBO przyspiesza!", music: "cracow", bg: "krakow", outfit: "jacket", speed: 235, secs: 64, accent: "#ff9a3c", bonusName: "obwarzanki" },
+  { id: "korea", n: 2, name: "Korea", sub: "Miasto świateł", hint: "Lampiony niosą Alę w górę. Ala leci sama, a TURBO przyspiesza!", music: "korea", bg: "korea", outfit: "hanbok", speed: 245, secs: 64, accent: "#ff5f6a", bonusName: "lampiony" },
+  { id: "spain", n: 3, name: "Hiszpania", sub: "Zaćmienie i flamenco", hint: "Zbieraj pomarańcze i gwiazdki. Ala leci sama, a TURBO przyspiesza!", music: "spain", bg: "spain", outfit: "jacket", speed: 255, secs: 64, accent: "#ffcf4a", bonusName: "pomarańcze" },
+  { id: "rabko", n: 4, name: "Rabkoland", sub: "Karuzela i kolejka górska", hint: "Przelatuj przez obręcze i łap balony. Ala leci sama, a TURBO przyspiesza!", music: "rabkoland", bg: "rabko", outfit: "jacket", speed: 265, secs: 64, accent: "#ff7ad9", bonusName: "balony" },
 ];
 
 const rng = (seed: number) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };

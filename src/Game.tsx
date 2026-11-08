@@ -98,6 +98,20 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
           if (k.has("u") || k.has("d") || s.ptr || Math.abs(diff) < 10) s.target = null;
           else tvy = clamp(diff * 5, -VM, VM);
         }
+        if (s.target === null && !s.ptr && !k.size) {
+          // full autopilot: fly to the next star, bonus or ring ahead
+          const wx = s.cam + s.ax + 34, wy = s.ay - 22;
+          let best: Ent | null = null, bs = 1e9;
+          for (const e of s.ents) {
+            if (e.done || e.taken || (e.kind !== "spark" && e.kind !== "bonus" && e.kind !== "ring")) continue;
+            const ahead = e.x - wx; if (ahead < -10 || ahead > 1000) continue;
+            const sc = ahead - (e.kind === "spark" ? 0 : 260) + Math.abs(e.y - wy) * 0.25;
+            if (sc < bs) { bs = sc; best = e; }
+          }
+          const gy = best ? best.y : 500;
+          tvy = clamp((gy - wy) * 4.5, -VM, VM);
+          tvx = clamp((430 - s.ax) * 2, -300, 300);
+        }
         const sm = s.slow > 0 ? 0.45 : 1;
         s.boost += ((s.boostOn ? 1 : 0) - s.boost) * Math.min(1, dt * 6);
         s.dcam = def.speed * sm * (1 + 0.9 * s.boost) * dt * FAST;
@@ -241,7 +255,6 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
         };
         const tb = s.boost > 0.3;
         return (<>
-          {key("u", "▲", 196, 220)}{key("l", "◀", 360, 40)}{key("d", "▼", 196, 40)}{key("r", "▶", 32, 40)}
           <div onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); if (!s.boostOn) audio.whoosh(); s.boostOn = true; }} onPointerUp={() => { s.boostOn = false; }} onPointerLeave={() => { s.boostOn = false; }} onPointerCancel={() => { s.boostOn = false; }} onContextMenu={(e) => e.preventDefault()} style={{ ...base, left: 36, bottom: 40, width: 230, height: 230, borderRadius: 115, fontSize: 52, background: tb ? "#ffe14d" : "#ff7ad9", transform: tb ? "translateY(6px)" : undefined }}>TURBO</div>
         </>);
       })() : null}
@@ -256,7 +269,7 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
           <div style={{ fontSize: 40, color: "#ffe14d", marginTop: 26, WebkitTextStroke: "8px #1a1226", paintOrder: "stroke fill" }}>{def.hint}</div>
         </div>
       ) : null}
-      {first && s.time > 4.8 && s.time < 11 ? <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, textAlign: "center", fontFamily, fontWeight: 800, fontSize: 44, color: "#fff", WebkitTextStroke: "9px #1a1226", paintOrder: "stroke fill", opacity: clamp((11 - s.time) / 1.5), pointerEvents: "none" }}>Stuknij ▲ lub ▼ – Ala sama poleci do następnej gwiazdki · Spacja = turbo</div> : null}
+      {first && s.time > 4.8 && s.time < 11 ? <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, textAlign: "center", fontFamily, fontWeight: 800, fontSize: 44, color: "#fff", WebkitTextStroke: "9px #1a1226", paintOrder: "stroke fill", opacity: clamp((11 - s.time) / 1.5), pointerEvents: "none" }}>Ala leci sama i zbiera gwiazdki · Turbo = szybciej</div> : null}
       {s.paused ? <div style={{ position: "absolute", inset: 0, background: "rgba(10,8,24,.55)", display: "grid", placeItems: "center", fontFamily, fontWeight: 800, fontSize: 120, color: "#fff", WebkitTextStroke: "12px #1a1226", paintOrder: "stroke fill" }} onPointerDown={(e) => { e.stopPropagation(); (window as unknown as { __pause: () => void }).__pause(); }}>Pauza</div> : null}
     </div>
   );
