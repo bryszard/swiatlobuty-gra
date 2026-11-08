@@ -27,13 +27,29 @@ const PAD = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coa
 const COLS = ["#ff7ad9", "#ffe14d", "#7ae7ff", "#ffffff", "#8cf0a8"];
 const KEYS: Record<string, string> = { ArrowUp: "u", w: "u", W: "u", ArrowDown: "d", s: "d", S: "d", ArrowLeft: "l", a: "l", A: "l", ArrowRight: "r", d: "r", D: "r" };
 
+type GS = { keys: Set<string>; kt: Record<string, number>; target: number | null; ents: Ent[]; cam: number; ax: number; ay: number; time: number };
+const press = (s: GS, k: string) => { if (!s.keys.has(k)) { s.kt[k] = s.time; s.keys.add(k); if (k === "u" || k === "d") s.target = null; } };
+/** A quick tap on up/down glides Ala to the height of the next star or bonus above/below her. */
+const release = (s: GS, k: string) => {
+  if (!s.keys.delete(k)) return;
+  if ((k !== "u" && k !== "d") || s.time - (s.kt[k] ?? -9) > 0.4) return;
+  const ay = s.ay - 22, ax = s.cam + s.ax + 34;
+  let best: Ent | null = null;
+  for (const e of s.ents) {
+    if (e.done || e.taken || (e.kind !== "spark" && e.kind !== "bonus" && e.kind !== "ring")) continue;
+    if (e.x < ax + 40 || e.x > ax + 1100) continue;
+    if (k === "u" ? e.y > ay - 70 : e.y < ay + 70) continue;
+    if (!best || e.x < best.x) best = e;
+  }
+  s.target = best ? best.y : Math.max(150, Math.min(900, ay + (k === "u" ? -260 : 260)));
+};
 export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result) => void }> = ({ def, first, onDone }) => {
   const [, force] = useReducer((x: number) => x + 1, 0);
   const world = useMemo(() => generate(def), [def]);
   const L = levelLength(def);
   const root = useRef<HTMLDivElement>(null);
   const S = useRef({
-    cam: 0, time: 0, ax: 420, ay: 520, vx: 0, vy: 0, bump: 0, slow: 0, sparks: 0, combo: 0, comboT: -9, happy: 0, boostOn: false, boost: 0, dcam: 0,
+    cam: 0, time: 0, ax: 420, ay: 520, vx: 0, vy: 0, bump: 0, slow: 0, sparks: 0, combo: 0, comboT: -9, happy: 0, boostOn: false, target: null as null | number, kt: {} as Record<string, number>, boost: 0, dcam: 0,
     keys: new Set<string>(), ptr: null as null | { x: number; y: number }, parts: [] as Particle[], pops: [] as Popup[],
     ents: world.ents.map((e) => ({ ...e })), phase: "play" as "play" | "finish" | "done", finT: 0, paused: false, emit: 0, fin0: { x: 0, y: 0 }, doneCalled: false,
   });
@@ -47,9 +63,9 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
     const kd = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "p" || e.key === "P") { togglePause(); return; }
       if (e.key === " " || e.code === "Space") { e.preventDefault(); if (!s.boostOn) { s.boostOn = true; audio.whoosh(); } return; }
-      const k = KEYS[e.key]; if (k) { s.keys.add(k); e.preventDefault(); }
+      const k = KEYS[e.key]; if (k) { press(s, k); e.preventDefault(); }
     };
-    const ku = (e: KeyboardEvent) => { if (e.key === " " || e.code === "Space") s.boostOn = false; const k = KEYS[e.key]; if (k) s.keys.delete(k); };
+    const ku = (e: KeyboardEvent) => { if (e.key === " " || e.code === "Space") s.boostOn = false; const k = KEYS[e.key]; if (k) release(s, k); };
     const pd = (e: PointerEvent) => { s.ptr = toStage(e); };
     const pm = (e: PointerEvent) => { if (e.buttons || e.pointerType === "touch") s.ptr = toStage(e); };
     const pu = () => { s.ptr = null; };
@@ -77,6 +93,11 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
       if (s.phase === "play") {
         if (k.has("l")) tvx -= VM; if (k.has("r")) tvx += VM; if (k.has("u")) tvy -= VM; if (k.has("d")) tvy += VM;
         if (s.ptr && !k.size) { const cx = s.ax + 30, cy = s.ay - 20; tvx = clamp((s.ptr.x - cx) * 4.2, -VM, VM); tvy = clamp((s.ptr.y - cy) * 4.2, -VM, VM); if (Math.hypot(s.ptr.x - cx, s.ptr.y - cy) < 14) { tvx = 0; tvy = 0; } }
+        if (s.target !== null) {
+          const diff = s.target - (s.ay - 22);
+          if (k.has("u") || k.has("d") || s.ptr || Math.abs(diff) < 10) s.target = null;
+          else tvy = clamp(diff * 5, -VM, VM);
+        }
         const sm = s.slow > 0 ? 0.45 : 1;
         s.boost += ((s.boostOn ? 1 : 0) - s.boost) * Math.min(1, dt * 6);
         s.dcam = def.speed * sm * (1 + 0.9 * s.boost) * dt * FAST;
@@ -214,8 +235,8 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
         const base = { position: "absolute", width: 150, height: 150, borderRadius: 40, border: "8px solid #1a1226", boxShadow: "0 8px 0 #1a1226", display: "flex", alignItems: "center", justifyContent: "center", fontFamily, fontWeight: 800, color: "#1a1226", userSelect: "none", touchAction: "none", cursor: "pointer", WebkitUserSelect: "none" } as React.CSSProperties;
         const key = (k: string, label: string, right: number, bottom: number) => {
           const on = s.keys.has(k);
-          const dn = (e: React.PointerEvent) => { e.stopPropagation(); e.preventDefault(); s.keys.add(k); };
-          const up = () => { s.keys.delete(k); };
+          const dn = (e: React.PointerEvent) => { e.stopPropagation(); e.preventDefault(); press(s, k); };
+          const up = () => { release(s, k); };
           return <div key={k} onPointerDown={dn} onPointerUp={up} onPointerLeave={up} onPointerCancel={up} onContextMenu={(e) => e.preventDefault()} style={{ ...base, right, bottom, fontSize: 80, background: on ? "#ffe14d" : "rgba(255,255,255,.82)", transform: on ? "translateY(6px)" : undefined }}>{label}</div>;
         };
         const tb = s.boost > 0.3;
@@ -235,7 +256,7 @@ export const Game: React.FC<{ def: LevelDef; first: boolean; onDone: (r: Result)
           <div style={{ fontSize: 40, color: "#ffe14d", marginTop: 26, WebkitTextStroke: "8px #1a1226", paintOrder: "stroke fill" }}>{def.hint}</div>
         </div>
       ) : null}
-      {first && s.time > 4.8 && s.time < 11 ? <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, textAlign: "center", fontFamily, fontWeight: 800, fontSize: 44, color: "#fff", WebkitTextStroke: "9px #1a1226", paintOrder: "stroke fill", opacity: clamp((11 - s.time) / 1.5), pointerEvents: "none" }}>Strzałki lub WASD · albo przeciągnij palcem · Spacja = turbo · Esc = pauza</div> : null}
+      {first && s.time > 4.8 && s.time < 11 ? <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, textAlign: "center", fontFamily, fontWeight: 800, fontSize: 44, color: "#fff", WebkitTextStroke: "9px #1a1226", paintOrder: "stroke fill", opacity: clamp((11 - s.time) / 1.5), pointerEvents: "none" }}>Stuknij ▲ lub ▼ – Ala sama poleci do następnej gwiazdki · Spacja = turbo</div> : null}
       {s.paused ? <div style={{ position: "absolute", inset: 0, background: "rgba(10,8,24,.55)", display: "grid", placeItems: "center", fontFamily, fontWeight: 800, fontSize: 120, color: "#fff", WebkitTextStroke: "12px #1a1226", paintOrder: "stroke fill" }} onPointerDown={(e) => { e.stopPropagation(); (window as unknown as { __pause: () => void }).__pause(); }}>Pauza</div> : null}
     </div>
   );

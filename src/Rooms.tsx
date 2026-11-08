@@ -89,7 +89,7 @@ export const Intro: React.FC<{ onDone: () => void; startPhase?: string }> = ({ o
   const ph = R.ph;
   let st = 6, pose = mixPose("sleep", "sleep", 0), x = BED.x, y = BED.y, scale = 1, rot = 0, flat = false, fade = 0, noShoes = true, eyes: "open" | "closed" | "happy" = "closed";
   let props = floorProps();
-  if (ph === "sleep") { st = 6 + Math.sin(R.now * 0.6) * 0.5; }
+  if (ph === "sleep") { st = 6 + Math.sin(R.now * 0.6) * 0.5; if (el > 4) { go("wake"); audio.yawn(); } }
   else if (ph === "wake") {
     const p = clamp(el / 9.5);
     st = 16 + p * 30;
@@ -99,6 +99,7 @@ export const Intro: React.FC<{ onDone: () => void; startPhase?: string }> = ({ o
     if (el > 9.5) go("shoes");
   } else if (ph === "shoes") {
     st = 46; pose = mixPose("edge", "edge", 0); x = EDGE.x; y = EDGE.y + Math.sin(R.now * 2.4) * 4; flat = true; eyes = "open";
+    if (el > 2.8) { go("dress"); audio.click(); }
   } else if (ph === "dress") {
     st = 46; flat = true; x = EDGE.x + 10; y = EDGE.y + 6;
     const down = ease(clamp(el / 0.7)), up = ease(clamp((el - 1.0) / 0.6));
@@ -121,11 +122,11 @@ export const Intro: React.FC<{ onDone: () => void; startPhase?: string }> = ({ o
   return (
     <div style={{ position: "absolute", inset: 0 }} onPointerDown={() => (window as unknown as { __act: () => void }).__act()}>
       <RoomView v={v} />
-      {ph === "sleep" ? <div style={{ ...hintCommon, top: 90, fontSize: 64 }}>Ala jeszcze śpi… <span style={{ color: "#ffe14d" }}>Zzz</span><div style={{ fontSize: 46, marginTop: 14, opacity: 0.7 + 0.3 * Math.sin(R.now * 4) }}>Dotknij lub naciśnij spację, aby ją obudzić</div></div> : null}
+      {ph === "sleep" ? <div style={{ ...hintCommon, top: 90, fontSize: 64 }}>Ala jeszcze śpi… <span style={{ color: "#ffe14d" }}>Zzz</span><div style={{ fontSize: 46, marginTop: 14, opacity: 0.7 + 0.3 * Math.sin(R.now * 4) }}>Za chwilę się obudzi… (dotknij, żeby przyspieszyć)</div></div> : null}
       {ph === "wake" ? <div style={{ ...hintCommon, top: 90, fontSize: 64 }}>{el < 3 ? "Dzień dobry, słoneczko!" : el < 7 ? "Słońce zagląda przez szyby…" : "Na podłodze czeka cud!"}</div> : null}
       {ph === "shoes" ? <>
         <div style={{ position: "absolute", left: FS.x - 120, top: FS.y - 210, width: 320, height: 240, border: "7px dashed #ffe14d", borderRadius: 120, opacity: 0.55 + 0.4 * Math.sin(R.now * 5), pointerEvents: "none" }} />
-        <div style={{ ...hintCommon, top: 90, fontSize: 64 }}>Włóż Światłobuty!<div style={{ fontSize: 46, marginTop: 14, opacity: 0.7 + 0.3 * Math.sin(R.now * 4) }}>Dotknij lub naciśnij spację</div></div>
+        <div style={{ ...hintCommon, top: 90, fontSize: 64 }}>Ala wkłada Światłobuty!</div>
       </> : null}
       {ph === "dress" && el > 1 ? <div style={{ ...hintCommon, top: 100, fontSize: 90, color: "#ffe14d" }}>Błysk!</div> : null}
     </div>
@@ -153,6 +154,7 @@ export const Outro: React.FC<{ onAgain: () => void; startPhase?: string }> = ({ 
     if (el > 3.6) go("shoes");
   } else if (ph === "shoes") {
     pose = POSE_EDGE; y = EDGE.y + Math.sin(R.now * 2.4) * 4;
+    if (el > 2.8) { go("undress"); audio.click(); }
   } else if (ph === "undress") {
     x = EDGE.x + 10; y = EDGE.y + 6;
     const down = ease(clamp(el / 0.7)), up = ease(clamp((el - 1.0) / 0.6));
@@ -176,7 +178,7 @@ export const Outro: React.FC<{ onAgain: () => void; startPhase?: string }> = ({ 
     <div style={{ position: "absolute", inset: 0 }} onPointerDown={() => (window as unknown as { __act: () => void }).__act()}>
       <RoomView v={v} />
       {ph === "in" ? <div style={{ ...hint, top: 90, fontSize: 64 }}>Wróciłaś do domu, Alu!</div> : null}
-      {ph === "shoes" ? <div style={{ ...hint, top: 90, fontSize: 64 }}>Czas spać. Zdejmij Światłobuty<div style={{ fontSize: 46, marginTop: 14, opacity: 0.7 + 0.3 * Math.sin(R.now * 4) }}>Dotknij lub naciśnij spację</div></div> : null}
+      {ph === "shoes" ? <div style={{ ...hint, top: 90, fontSize: 64 }}>Czas spać. Ala zdejmuje Światłobuty</div> : null}
       {ph === "lie" && el > 5 && el < 10.5 ? <div style={{ ...hint, top: 90, fontSize: 70, opacity: clamp((el - 5) / 1.2) * clamp((10.5 - el) / 1) }}>Dobranoc, świecie…</div> : null}
       {ph === "end" ? (
         <div style={{ ...hint, top: 80 }}>
